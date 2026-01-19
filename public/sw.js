@@ -56,6 +56,8 @@ self.addEventListener("message", (event) => {
 
 // Store timeout ID for scheduled notifications
 let scheduledTimeout = null;
+let scheduledPhase = null;
+let scheduledLocale = null;
 
 function scheduleNotification(endAt, phase, locale) {
   // Cancel any existing scheduled notification
@@ -66,8 +68,20 @@ function scheduleNotification(endAt, phase, locale) {
 
   if (delay <= 0) return;
 
-  scheduledTimeout = setTimeout(() => {
-    showTimerNotification(phase, locale);
+  scheduledPhase = phase;
+  scheduledLocale = locale;
+
+  scheduledTimeout = setTimeout(async () => {
+    // Check if any app window is visible/focused
+    const clientList = await clients.matchAll({ type: "window", includeUncontrolled: true });
+    const hasVisibleClient = clientList.some(client =>
+      client.url.includes(self.location.origin) && client.visibilityState === "visible"
+    );
+
+    // Only show notification if user is NOT on the site
+    if (!hasVisibleClient) {
+      showTimerNotification(phase, locale);
+    }
   }, delay);
 }
 
@@ -75,6 +89,8 @@ function cancelScheduledNotification() {
   if (scheduledTimeout) {
     clearTimeout(scheduledTimeout);
     scheduledTimeout = null;
+    scheduledPhase = null;
+    scheduledLocale = null;
   }
 }
 
@@ -84,19 +100,25 @@ function showTimerNotification(phase, locale) {
       focusComplete: "Fokus vaqti tugadi!",
       focusBody: "Dam olish vaqti keldi. Tanaffus boshlandi.",
       timeoutComplete: "Tanaffus tugadi!",
-      timeoutBody: "Yangi fokus sessiyasiga tayyormisiz?",
+      timeoutBody: "Davom etasizmi?",
+      continueAction: "Davom etish",
+      stopAction: "To'xtatish",
     },
     ru: {
       focusComplete: "Время фокуса закончилось!",
       focusBody: "Пора отдохнуть. Перерыв начался.",
       timeoutComplete: "Перерыв закончился!",
-      timeoutBody: "Готовы к новой сессии фокуса?",
+      timeoutBody: "Продолжить?",
+      continueAction: "Продолжить",
+      stopAction: "Остановить",
     },
     en: {
       focusComplete: "Focus time is up!",
       focusBody: "Time for a break. Timeout has started.",
       timeoutComplete: "Timeout is over!",
-      timeoutBody: "Ready for a new focus session?",
+      timeoutBody: "Continue?",
+      continueAction: "Continue",
+      stopAction: "Stop",
     },
   };
 
@@ -105,32 +127,68 @@ function showTimerNotification(phase, locale) {
   const title = phase === "focus" ? t.focusComplete : t.timeoutComplete;
   const body = phase === "focus" ? t.focusBody : t.timeoutBody;
 
+  // For timeout end, add action buttons to ask if user wants to continue
+  const actions = phase === "timeout" ? [
+    { action: "continue", title: t.continueAction },
+    { action: "stop", title: t.stopAction },
+  ] : [];
+
   self.registration.showNotification(title, {
     body,
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
     tag: "focus-timeout-timer",
+    data: { phase, locale },
     renotify: true,
-    requireInteraction: true,
+    requireInteraction: phase === "timeout", // Only require interaction for timeout end
     vibrate: [200, 100, 200],
+    actions,
   });
 }
 
 // Handle notification click
 self.addEventListener("notificationclick", (event) => {
+  const action = event.action;
+  const phase = event.notification.data?.phase;
+
   event.notification.close();
 
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      // If there's already a window open, focus it
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (clientList) => {
+      // Find existing window
+      let appWindow = null;
       for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && "focus" in client) {
-          return client.focus();
+        if (client.url.includes(self.location.origin)) {
+          appWindow = client;
+          break;
         }
       }
-      // Otherwise open a new window
-      if (clients.openWindow) {
-        return clients.openWindow("/");
+
+      // If timeout ended and user clicked continue or the notification itself
+      if (phase === "timeout" && action !== "stop") {
+        // Send message to continue the timer
+        if (appWindow) {
+          appWindow.postMessage({ type: "CONTINUE_TIMER" });
+          return appWindow.focus();
+        } else if (clients.openWindow) {
+          // Open window with continue flag
+          return clients.openWindow("/?continue=1");
+        }
+      } else if (action === "stop") {
+        // User wants to stop - just open the app
+        if (appWindow) {
+          appWindow.postMessage({ type: "STOP_TIMER" });
+          return appWindow.focus();
+        } else if (clients.openWindow) {
+          return clients.openWindow("/");
+        }
+      } else {
+        // Focus start notification - just open the app
+        if (appWindow) {
+          return appWindow.focus();
+        } else if (clients.openWindow) {
+          return clients.openWindow("/");
+        }
       }
     })
   );

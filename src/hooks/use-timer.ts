@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 type Phase = "focus" | "timeout";
-type Status = "idle" | "running" | "paused" | "complete";
+type Status = "idle" | "running" | "paused" | "complete" | "waiting_confirmation";
 
 type TimerState = {
   phase: Phase;
@@ -32,6 +32,9 @@ type TimerActions = {
   completeTimer: () => void;
   clearPendingCompletion: () => void;
   getRemainingMs: () => number;
+  // New: wait for user confirmation when timeout ends and user is away
+  waitForConfirmation: () => void;
+  confirmContinue: (focusMs: number, totalSessions: number) => void;
 };
 
 const initialState: TimerState = {
@@ -142,6 +145,34 @@ export const useTimerStore = create<TimerState & TimerActions>()(
           return Math.max(0, endAt - Date.now());
         }
         return 0;
+      },
+
+      waitForConfirmation: () => {
+        set({
+          status: "waiting_confirmation",
+          endAt: null,
+        });
+      },
+
+      confirmContinue: (focusMs: number, totalSessions: number) => {
+        const { currentSession } = get();
+        if (currentSession < totalSessions) {
+          const now = Date.now();
+          set({
+            currentSession: currentSession + 1,
+            phase: "focus",
+            status: "running",
+            endAt: now + focusMs,
+            phaseStartedAt: now,
+            phaseDurationMs: focusMs,
+          });
+        } else {
+          set({
+            status: "complete",
+            endAt: null,
+            pendingCompletion: false,
+          });
+        }
       },
     }),
     {

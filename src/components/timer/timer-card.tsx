@@ -66,6 +66,8 @@ export default function TimerCard() {
     transitionToTimeout,
     transitionToNextSession,
     completeTimer,
+    waitForConfirmation,
+    confirmContinue,
   } = timerStore;
 
   const [pickerOpen, setPickerOpen] = useState<PickerType>(null);
@@ -145,11 +147,55 @@ export default function TimerCard() {
       return { displayMs: 0, progress: 1 };
     }
 
+    if (status === "waiting_confirmation") {
+      // Show 0 time remaining and full progress when waiting for user confirmation
+      return { displayMs: 0, progress: 1 };
+    }
+
     return { displayMs: focusMs, progress: 0 };
   }, [status, pausedRemainingMs, endAt, phaseDurationMs, focusMs]);
 
   // Get current display values (will be recalculated on each render triggered by forceUpdate)
   const { displayMs, progress } = getDisplayValues();
+
+  // Listen for Service Worker messages (when user clicks notification actions)
+  useEffect(() => {
+    if (!hydrated) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "CONTINUE_TIMER") {
+        // User clicked continue in notification - start next session
+        if (status === "waiting_confirmation" && currentSession < totalSessions) {
+          confirmContinue(focusMs, totalSessions);
+          playSound(settings.sounds.focusStart);
+          scheduleNotification(Date.now() + focusMs, "focus", locale);
+        }
+      } else if (event.data?.type === "STOP_TIMER") {
+        // User clicked stop in notification
+        storeResetTimer();
+        processedEndRef.current = null;
+        cancelNotification();
+      }
+    };
+
+    navigator.serviceWorker?.addEventListener("message", handleMessage);
+    return () => {
+      navigator.serviceWorker?.removeEventListener("message", handleMessage);
+    };
+  }, [
+    hydrated,
+    status,
+    currentSession,
+    totalSessions,
+    focusMs,
+    confirmContinue,
+    storeResetTimer,
+    playSound,
+    settings.sounds.focusStart,
+    scheduleNotification,
+    cancelNotification,
+    locale,
+  ]);
 
   // Main timer loop - triggers re-renders and handles transitions
   useEffect(() => {
@@ -176,17 +222,28 @@ export default function TimerCard() {
           // Schedule notification for timeout end
           scheduleNotification(Date.now() + timeoutMs, "timeout", locale);
         } else {
+          // Timeout ended
           playSound(settings.sounds.timeoutEnd);
           recordSession(
             Math.round(settings.focusSeconds / 60),
             Math.round(timeoutSeconds / 60)
           );
 
+          // Check if user is on the site (document visible)
+          const isUserOnSite = document.visibilityState === "visible";
+
           if (currentSession < totalSessions) {
-            transitionToNextSession(focusMs, totalSessions);
-            playSound(settings.sounds.focusStart);
-            // Schedule notification for next focus end
-            scheduleNotification(Date.now() + focusMs, "focus", locale);
+            if (isUserOnSite) {
+              // User is on site - auto-continue to next session
+              transitionToNextSession(focusMs, totalSessions);
+              playSound(settings.sounds.focusStart);
+              // Schedule notification for next focus end
+              scheduleNotification(Date.now() + focusMs, "focus", locale);
+            } else {
+              // User is away - wait for confirmation via notification
+              waitForConfirmation();
+              // Notification is already shown by SW when timeout ends
+            }
           } else {
             completeTimer();
             cancelNotification();
@@ -216,6 +273,7 @@ export default function TimerCard() {
     transitionToTimeout,
     transitionToNextSession,
     completeTimer,
+    waitForConfirmation,
     scheduleNotification,
     cancelNotification,
     locale,
@@ -440,7 +498,31 @@ export default function TimerCard() {
                   {t.timer.resume}
                 </Button>
               ) : null}
-              {status !== "idle" && (
+              {status === "waiting_confirmation" ? (
+                <>
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                      confirmContinue(focusMs, totalSessions);
+                      playSound(settings.sounds.focusStart);
+                      scheduleNotification(Date.now() + focusMs, "focus", locale);
+                    }}
+                    className="h-10 gap-2 px-6 sm:h-11 sm:px-8"
+                  >
+                    <Play className="h-4 w-4 sm:h-5 sm:w-5" />
+                    {t.timer.continue}
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    onClick={resetTimer}
+                    className="h-10 gap-2 px-6 sm:h-11 sm:px-8"
+                  >
+                    {t.timer.stop}
+                  </Button>
+                </>
+              ) : null}
+              {status !== "idle" && status !== "waiting_confirmation" && (
                 <Button variant="ghost" size="icon" onClick={resetTimer} className="h-10 w-10 sm:h-11 sm:w-11">
                   <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
@@ -452,6 +534,12 @@ export default function TimerCard() {
                 {totalSessions > 1
                   ? t.timer.allSessionsComplete.replace("{count}", String(totalSessions))
                   : t.timer.sessionComplete}
+              </p>
+            )}
+
+            {status === "waiting_confirmation" && (
+              <p className="text-center text-xs text-emerald-600 dark:text-emerald-200 sm:text-sm">
+                {t.timer.timeoutEnded}
               </p>
             )}
           </div>
