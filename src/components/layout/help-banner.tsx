@@ -24,7 +24,7 @@ export default function HelpBanner() {
   };
 
   return (
-    <div className="border-b border-white/5 bg-primary/10">
+    <div className="border-b border-white/5 bg-primary/10 backdrop-blur-lg">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-2 sm:px-6 lg:px-10">
         <Link
           href="/help"
