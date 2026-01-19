@@ -1,8 +1,12 @@
 export const defaultSoundOptions = [
-  { label: "Soft Signal", value: "/sounds/focus-start.wav" },
-  { label: "Bright Chime", value: "/sounds/focus-end.wav" },
-  { label: "Calm Pulse", value: "/sounds/timeout-start.wav" },
-  { label: "Deep Tap", value: "/sounds/timeout-end.wav" },
+  { label: "Ascending Chime", value: "/sounds/focus-start.wav" },
+  { label: "Meditation Bowl", value: "/sounds/focus-end.wav" },
+  { label: "Soft Pulse", value: "/sounds/timeout-start.wav" },
+  { label: "Deep Gong", value: "/sounds/timeout-end.wav" },
+  { label: "Simple Bell", value: "/sounds/bell.wav" },
+  { label: "Soft Chime", value: "/sounds/soft-chime.wav" },
+  { label: "Triple Ding", value: "/sounds/triple-ding.wav" },
+  { label: "Zen Bowl", value: "/sounds/zen-bowl.wav" },
   { label: "None", value: "" },
 ];
 

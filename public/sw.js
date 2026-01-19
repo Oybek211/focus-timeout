@@ -1,4 +1,4 @@
-const CACHE_VERSION = "focus-timeout-v2";
+const CACHE_VERSION = "focus-timeout-v3";
 const APP_SHELL = [
   "/",
   "/settings",
@@ -13,6 +13,10 @@ const APP_SHELL = [
   "/sounds/focus-end.wav",
   "/sounds/timeout-start.wav",
   "/sounds/timeout-end.wav",
+  "/sounds/bell.wav",
+  "/sounds/soft-chime.wav",
+  "/sounds/triple-ding.wav",
+  "/sounds/zen-bowl.wav",
 ];
 
 self.addEventListener("install", (event) => {
