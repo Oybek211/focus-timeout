@@ -9,16 +9,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-
-const links = [
-  { href: "/", label: "Timer" },
-  { href: "/settings", label: "Settings" },
-  { href: "/statistics", label: "Statistics" },
-  { href: "/help", label: "Help" },
-  { href: "/about", label: "About" },
-];
+import { useTranslations } from "@/hooks/use-locale";
 
 export default function SiteNavMobile() {
+  const t = useTranslations();
+
+  const links = [
+    { href: "/", label: t.home },
+    { href: "/settings", label: t.settings },
+    { href: "/statistics", label: t.statistics },
+    { href: "/help", label: t.help },
+    { href: "/about", label: t.about },
+  ];
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

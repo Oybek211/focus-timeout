@@ -9,10 +9,10 @@ export type TimeoutMode = "percent" | "fixed";
 export type RepeatMode = "once" | "loop" | "custom";
 
 export type Settings = {
-  focusMinutes: number;
+  focusSeconds: number;
   timeoutMode: TimeoutMode;
   timeoutPercent: number;
-  timeoutMinutes: number;
+  timeoutSeconds: number;
   repeatMode: RepeatMode;
   repeatCount: number;
   sounds: SoundSettings;
@@ -33,11 +33,11 @@ export type Stats = {
 };
 
 export const defaultSettings: Settings = {
-  focusMinutes: 25,
-  timeoutMode: "percent",
+  focusSeconds: 25 * 60,
+  timeoutMode: "fixed",
   timeoutPercent: 10,
-  timeoutMinutes: 5,
-  repeatMode: "once",
+  timeoutSeconds: 5 * 60,
+  repeatMode: "loop",
   repeatCount: 2,
   sounds: {
     focusStart: "/sounds/focus-start.wav",

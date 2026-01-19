@@ -3,9 +3,11 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStats } from "@/hooks/use-stats";
+import { useTranslations } from "@/hooks/use-locale";
 
 export default function QuickStats() {
   const stats = useStats();
+  const t = useTranslations();
 
   const todayKey = useMemo(() => {
     const now = new Date();
@@ -25,12 +27,12 @@ export default function QuickStats() {
   return (
     <Card className="border-border bg-card/80 backdrop-blur-sm">
       <CardHeader className="px-4 pb-2 pt-4 sm:px-6 sm:pt-6">
-        <CardTitle className="text-base">Today</CardTitle>
+        <CardTitle className="text-base">{t.quickStats.title}</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-3 px-4 pb-4 sm:gap-4 sm:px-6 sm:pb-6">
         <div className="rounded-xl border border-border bg-muted/50 p-3 sm:rounded-2xl sm:p-4">
           <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground sm:text-xs">
-            Focus
+            {t.quickStats.focus}
           </p>
           <div className="mt-1.5 text-2xl font-semibold text-foreground sm:mt-2 sm:text-3xl">
             {today.focusMinutes} min
@@ -38,7 +40,7 @@ export default function QuickStats() {
         </div>
         <div className="rounded-xl border border-border bg-muted/50 p-3 sm:rounded-2xl sm:p-4">
           <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground sm:text-xs">
-            Timeout
+            {t.quickStats.timeout}
           </p>
           <div className="mt-1.5 text-2xl font-semibold text-foreground sm:mt-2 sm:text-3xl">
             {today.timeoutMinutes} min
@@ -46,7 +48,7 @@ export default function QuickStats() {
         </div>
         <div className="rounded-xl border border-border bg-muted/50 p-3 sm:rounded-2xl sm:p-4">
           <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground sm:text-xs">
-            Sessions
+            {t.quickStats.sessions}
           </p>
           <div className="mt-1.5 text-2xl font-semibold text-foreground sm:mt-2 sm:text-3xl">
             {today.sessions}

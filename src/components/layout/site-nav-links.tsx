@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-
-const links = [
-  { href: "/", label: "Timer" },
-  { href: "/settings", label: "Settings" },
-  { href: "/statistics", label: "Statistics" },
-  { href: "/help", label: "Help" },
-  { href: "/about", label: "About" },
-];
+import { useTranslations } from "@/hooks/use-locale";
 
 export default function NavLinks() {
   const pathname = usePathname();
+  const t = useTranslations();
+
+  const links = [
+    { href: "/", label: t.home },
+    { href: "/settings", label: t.settings },
+    { href: "/statistics", label: t.statistics },
+    { href: "/help", label: t.help },
+    { href: "/about", label: t.about },
+  ];
 
   return (
     <nav className="hidden items-center gap-2 text-sm font-medium text-white/70 md:flex">

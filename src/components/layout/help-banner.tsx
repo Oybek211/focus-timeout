@@ -1,26 +1,42 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore, useCallback } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
+import { useTranslations } from "@/hooks/use-locale";
 
 const DISMISSED_KEY = "focus-timeout:help-banner-dismissed";
 
+// Hydration-safe hook
+const emptySubscribe = () => () => {};
+function useHydration() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+}
+
 export default function HelpBanner() {
-  const [dismissed, setDismissed] = useState(true);
+  const t = useTranslations();
+  const hydrated = useHydration();
+  const [dismissedState, setDismissedState] = useState(false);
 
-  useEffect(() => {
+  // Read from localStorage only after hydration
+  const isDismissed = useCallback(() => {
+    if (!hydrated) return true; // Hide during SSR
+    if (dismissedState) return true;
     const stored = localStorage.getItem(DISMISSED_KEY);
-    setDismissed(stored === "true");
-  }, []);
+    return stored === "true";
+  }, [hydrated, dismissedState]);
 
-  if (dismissed) {
+  if (isDismissed()) {
     return null;
   }
 
   const handleDismiss = () => {
     localStorage.setItem(DISMISSED_KEY, "true");
-    setDismissed(true);
+    setDismissedState(true);
   };
 
   return (
@@ -30,7 +46,7 @@ export default function HelpBanner() {
           href="/help"
           className="text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          New to <span className="font-medium text-foreground">Focus Timeout</span>? Learn how it works →
+          {t.helpBanner.newTo} <span className="font-medium text-foreground">Focus Timeout</span>? {t.helpBanner.learnHow} →
         </Link>
         <button
           onClick={handleDismiss}

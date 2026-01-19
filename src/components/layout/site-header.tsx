@@ -3,6 +3,7 @@ import Link from "next/link";
 import NavLinks from "@/components/layout/site-nav-links";
 import SiteNavMobile from "@/components/layout/site-nav-mobile";
 import HelpBanner from "@/components/layout/help-banner";
+import LocaleSwitcher from "@/components/layout/locale-switcher";
 
 export default function SiteHeader() {
   return (
@@ -16,6 +17,7 @@ export default function SiteHeader() {
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             <NavLinks />
+            <LocaleSwitcher />
             <SiteNavMobile />
           </div>
         </div>

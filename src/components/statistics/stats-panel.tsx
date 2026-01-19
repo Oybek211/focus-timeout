@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Stats } from "@/lib/storage";
 import { useStats } from "@/hooks/use-stats";
+import { useTranslations } from "@/hooks/use-locale";
 
 function parseDateKey(key: string) {
   const [year, month, day] = key.split("-").map(Number);
@@ -44,6 +45,7 @@ function formatNumber(value: number) {
 
 export default function StatsPanel() {
   const stats = useStats();
+  const t = useTranslations();
 
   const todayKey = useMemo(() => {
     const now = new Date();
@@ -83,7 +85,7 @@ export default function StatsPanel() {
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Focus Minutes
+            {t.statsPage.focusMinutes}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -95,7 +97,7 @@ export default function StatsPanel() {
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Timeout Minutes
+            {t.statsPage.timeoutMinutes}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -107,7 +109,7 @@ export default function StatsPanel() {
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Sessions
+            {t.statsPage.sessions}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -122,9 +124,9 @@ export default function StatsPanel() {
   return (
     <Tabs defaultValue="today" className="w-full">
       <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="today">Today</TabsTrigger>
-        <TabsTrigger value="week">This week</TabsTrigger>
-        <TabsTrigger value="all">All time</TabsTrigger>
+        <TabsTrigger value="today">{t.statsPage.today}</TabsTrigger>
+        <TabsTrigger value="week">{t.statsPage.thisWeek}</TabsTrigger>
+        <TabsTrigger value="all">{t.statsPage.allTime}</TabsTrigger>
       </TabsList>
       <TabsContent value="today" className="mt-6">
         {renderSummary(today)}

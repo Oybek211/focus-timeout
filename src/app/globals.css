@@ -151,3 +151,12 @@
     ),
     linear-gradient(180deg, rgba(7, 10, 13, 0.95), rgba(18, 22, 26, 1));
 }
+
+/* Hide scrollbar for wheel picker */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
